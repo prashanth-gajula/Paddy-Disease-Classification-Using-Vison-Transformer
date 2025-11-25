@@ -2,63 +2,82 @@ Vision Transformer (ViT) for Paddy Leaf Disease Classification
 
 A from-scratch PyTorch implementation trained on real agricultural images
 
-Overview
+📌 Overview
 
-This project presents a fully custom implementation of a Vision Transformer (ViT) built entirely from scratch using PyTorch. No pre-trained weights or external transformer libraries are used. The goal of the model is to classify paddy leaf diseases using real farm images captured under natural conditions. The final model achieves more than 93% validation accuracy and is published on Hugging Face for public use and experimentation.
+This project presents a fully custom implementation of a Vision Transformer (ViT) built entirely from scratch using PyTorch.
+No pre-trained weights or external transformer libraries were used.
 
-Traditional CNNs focus on local patterns using convolutional filters, whereas Vision Transformers divide an image into patches and learn global relationships across the entire image. This allows the model to capture long-range dependencies and significantly improves robustness and accuracy, especially on diverse datasets.
+The objective is to classify paddy leaf diseases using real farm images captured under natural conditions.
+The final model achieves over 93% validation accuracy and is published on Hugging Face for public use.
 
-Dataset Overview
+Traditional CNNs rely on local receptive fields, whereas Vision Transformers divide images into patches and learn global relationships across the entire image. This enables improved robustness and higher accuracy, especially on diverse datasets.
 
-The dataset consists of real photographs of paddy leaves belonging to ten categories. Nine categories represent various diseases, and one corresponds to healthy leaves. Images were captured in real farming environments, meaning lighting, angle, background, and resolution vary significantly.
+🌱 Dataset Overview
 
-The dataset is highly imbalanced. Some examples include:
+The dataset contains 10 classes:
 
-The smallest class (Bacterial Panicle Blight) has 337 images
+9 disease categories
 
-The largest class (Healthy) has 1,764 images
+1 healthy leaf category
 
-Classes like Blast, Hispa, and Dead Heart contain over 1,000 images
+Images were captured in real farming environments with variations in lighting, angle, clarity, and resolution.
 
-Several minority diseases have only a few hundred samples
+Class Imbalance
 
-This imbalance required a training strategy that ensures fair learning across all classes.
+The dataset is highly imbalanced:
 
-Data Transformations
+337 images — Bacterial Panicle Blight (smallest class)
 
-All images were resized to 224 × 224 pixels to maintain a consistent input format for the Vision Transformer.
+1,764 images — Healthy (largest class)
 
-Training set transformations included:
+Blast, Hispa, Dead Heart — each with 1,000+ images
+
+Several minority diseases with only a few hundred samples
+
+This imbalance required careful sampling strategies during training.
+
+🖼️ Data Transformations
+Training Transformations
 
 Horizontal flips
 
 Random rotations
 
-Color jitter for brightness and contrast
+Color jitter (brightness & contrast)
 
-Random cropping and scaling
+Random cropping & scaling
 
 Normalization
 
-These augmentations simulate real-world inconsistencies experienced in farm conditions, improving the model’s generalization.
+These augmentations simulate real-world variations and improve generalization.
 
-Validation set transformations included:
+Validation Transformations
 
-Only resizing and normalization
+Resize to 224 × 224
+
+Normalize
 
 No augmentations
 
-This ensures evaluation is always performed on clean and consistent images.
+This ensures stable and fair model evaluation.
 
-Train–Validation Split and Class Imbalance Handling
+🔀 Train–Validation Split & Class Imbalance Handling
 
-An 80–20 split was used, created by randomly shuffling all image indices to ensure each class was proportionally represented.
+An 80–20 split was created by random shuffling, ensuring proportional representation across all classes.
 
-Because the dataset is imbalanced, a weighted sampling strategy was implemented during training. Classes with fewer images were oversampled, while majority classes were undersampled. This ensures the model receives balanced training signals without modifying or duplicating images in the dataset.
+To handle class imbalance:
 
-Model Configuration
+A WeightedRandomSampler was used
 
-The Vision Transformer implemented here is intentionally compact, balancing complexity with practical training needs.
+Minority classes were oversampled
+
+Majority classes were undersampled
+
+This ensures the model sees a balanced set of examples throughout training.
+
+⚙️ Model Configuration
+
+The Vision Transformer is intentionally compact to make training feasible on a single GPU.
 
 Key configuration details:
 
@@ -68,7 +87,7 @@ Patch size: 16 × 16
 
 Total patches: 196
 
-Embedding dimension (token size): 256
+Embedding dimension: 256
 
 Transformer blocks: 8
 
@@ -76,103 +95,112 @@ Attention heads: 8
 
 MLP hidden dimension: 512
 
-Number of classes: 10
+Classes: 10
 
 Batch size: 64
 
 Learning rate: 3e-4
 
-Training epochs: 100
+Epochs: 100
 
 Comparison with ViT-Base/16
+Feature	ViT-Base/16	My ViT
+Hidden size	768	256
+Heads	12	8
+Blocks	12	8
+Dataset scale	ImageNet/JFT	10-class agricultural dataset
 
-The original ViT-Base/16 model uses:
+The reduced model is efficient yet powerful enough for this domain-specific dataset.
 
-Hidden size 768
-
-12 attention heads
-
-12 transformer blocks
-
-Such a large configuration is unnecessary for a 10-class agricultural dataset. The reduced architecture used here trains faster and fits comfortably on a single GPU while still capturing the essential behavior of Vision Transformers.
-
-How the Vision Transformer Works — Step-by-Step
+🔍 How the Vision Transformer Works — Step-by-Step
 1. Patch Creation
 
-The 224 × 224 × 3 image is divided into 16 × 16 patches. This produces 196 fixed-size image patches arranged in sequence form.
+The input image (224 × 224 × 3) is divided into 196 patches of size 16 × 16.
 
 2. Patch Embedding
 
-Each patch is transformed into a 256-dimensional vector representation. Positional embeddings are added so the model knows the spatial location of each patch in the original image.
+Each patch is projected into a 256-dimensional embedding.
+Positional embeddings are added so the model can understand patch order.
 
 3. CLS Token
 
-A learnable classification token (CLS token) is added to the beginning of the sequence. After the transformer processes all patches, this token carries the final image-level representation.
+A learnable CLS token is prepended.
+After processing, this token acts as the final image representation.
 
 4. Transformer Encoder Blocks
 
-Each encoder block contains:
+Each block contains:
 
-Layer normalization
+LayerNorm
 
 Multi-head self-attention
 
-Residual connections
+Skip connections
 
-A feed-forward MLP layer
+MLP with GELU activation
 
-These blocks allow patches to interact globally, capturing long-range relationships across the leaf image.
+These allow the model to learn global relationships across patches.
 
 5. CLS Token Extraction
 
-After the sequence passes through all transformer blocks, only the updated CLS token is extracted. It represents the final learned summary of the entire image.
+After all transformer blocks, the final CLS token is extracted as the image embedding.
 
 6. Classification
 
-A simple classification head maps the CLS token representation into 10 output logits corresponding to the disease categories.
+A linear layer converts the CLS token into 10 class logits.
 
-Training Strategy
+🏋️ Training Strategy
 
-The training follows a standard deep-learning workflow:
+The training pipeline includes:
 
-Images are processed in batches
+Batch processing of images
 
-Forward pass computes predictions
+Forward pass to compute predictions
 
-Cross-entropy loss measures the prediction error
+Cross-entropy loss for error calculation
 
-Backpropagation calculates gradients
+Backpropagation to compute gradients
 
-The Adam optimizer updates model weights
+Adam optimizer for weight updates
 
-Accuracy is tracked during training
+Tracking loss and accuracy per epoch
 
-Loss and accuracy for each epoch are recorded
+Weighted sampling ensures that minority classes are learned effectively.
+Validation is performed on clean, untouched images to evaluate generalization.
 
-Weighted sampling ensures balanced learning despite dataset imbalance. Validation is performed at the end of each epoch on untouched, clean images to measure generalization.
+📈 Model Performance
 
-Model Performance
+93%+ validation accuracy
 
-Final validation accuracy: 93%+
+Smooth decreasing loss curve
 
-Smooth reduction in training loss across epochs
+Strong generalization
 
-Strong generalization due to augmentations and weighted sampling
+No significant overfitting
 
-No significant overfitting observed
+Good minority-class performance due to weighted sampling
 
-Hugging Face Model Publishing
+🤗 Hugging Face Model Publishing
 
-The final trained model was published on the Hugging Face Hub for easy reuse. The repository includes:
+The final trained model is publicly available on Hugging Face.
 
-Model weights (pytorch_model.bin)
+Repository includes:
 
-Architecture configuration (config.json)
+pytorch_model.bin (model weights)
 
-Project documentation (README.md)
+config.json (model architecture configuration)
 
-The model is available under the ID:
+README.md (documentation)
 
+Model ID:
 prashanth2000/vit-paddy-disease-classifier
 
-Publishing the model allows anyone to load, test, extend, or integrate it into real-world applications such as mobile disease-diagnosis systems or API-based crop monitoring tools.
+Publishing the model makes it accessible for:
+
+Research
+
+Mobile disease-detection apps
+
+Web-based crop monitoring tools
+
+Further fine-tuning or transfer learning
