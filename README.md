@@ -115,39 +115,39 @@ The reduced model is efficient yet powerful enough for this domain-specific data
 🔍 How the Vision Transformer Works — Step-by-Step
 1. Patch Creation
 
-  The input image (224 × 224 × 3) is divided into 196 patches of size 16 × 16.
+The input image (224 × 224 × 3) is divided into 196 patches of size 16 × 16.
 
 2. Patch Embedding
 
-  Each patch is projected into a 256-dimensional embedding.
-  Positional embeddings are added so the model can understand patch order.
+Each patch is projected into a 256-dimensional embedding.
+Positional embeddings are added so the model can understand patch order.
 
 3. CLS Token
 
-  A learnable CLS token is prepended.
-  After processing, this token acts as the final image representation.
+A learnable CLS token is prepended.
+After processing, this token acts as the final image representation.
 
 4. Transformer Encoder Blocks
 
-  Each block contains:
+Each block contains:
 
-  LayerNorm
-  
-  Multi-head self-attention
-  
-  Skip connections
-  
-  MLP with GELU activation
-  
-  These allow the model to learn global relationships across patches.
+LayerNorm
+
+Multi-head self-attention
+
+Skip connections
+
+MLP with GELU activation
+
+These allow the model to learn global relationships across patches.
 
 5. CLS Token Extraction
 
-  After all transformer blocks, the final CLS token is extracted as the image embedding.
+After all transformer blocks, the final CLS token is extracted as the image embedding.
 
 6. Classification
 
-  A linear layer converts the CLS token into 10 class logits.
+A linear layer converts the CLS token into 10 class logits.
 
 🏋️ Training Strategy
 
